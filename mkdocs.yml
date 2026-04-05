@@ -1,0 +1,61 @@
+site_name: RAG System Design Guide
+site_description: A practitioner-focused guide to designing, building, and operating Retrieval-Augmented Generation systems.
+site_url: https://amitgambhir.github.io/rag-system-design-guide/
+repo_url: https://github.com/amitgambhir/rag-system-design-guide
+repo_name: amitgambhir/rag-system-design-guide
+
+theme:
+  name: material
+  font:
+    text: Roboto
+    code: Roboto Mono
+  palette:
+    - scheme: default
+      primary: white
+      accent: white
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: grey
+      accent: grey
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.instant
+    - navigation.tabs
+    - navigation.sections
+    - navigation.top
+    - navigation.footer
+    - navigation.path
+    - navigation.tracking
+    - content.code.copy
+    - content.tooltips
+    - search.highlight
+    - search.suggest
+    - toc.follow
+  icon:
+    repo: fontawesome/brands/github
+
+extra_css:
+  - stylesheets/custom.css
+
+plugins:
+  - search
+
+nav:
+  - Home: index.md
+  - Full Guide: guide.md
+
+markdown_extensions:
+  - toc:
+      permalink: true
+  - tables
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - attr_list
+  - md_in_html
