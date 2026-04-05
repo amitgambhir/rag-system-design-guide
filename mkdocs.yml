@@ -51,6 +51,7 @@ nav:
 markdown_extensions:
   - toc:
       permalink: true
+      toc_depth: 3
   - tables
   - admonition
   - pymdownx.details

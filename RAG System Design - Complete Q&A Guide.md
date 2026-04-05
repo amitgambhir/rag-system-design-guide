@@ -66,21 +66,21 @@ date: 2026-04-05
 
 ---
 
-# Part I — Foundations
+## Part I — Foundations
 
 ---
 
-## 0. Foundation Models & LLM Pitfalls
+### 0. Foundation Models & LLM Pitfalls
 
 Before diving into RAG, it helps to understand what LLMs can and cannot do on their own — because RAG exists specifically to address their limitations.
 
-### What Are Foundation Models?
+#### What Are Foundation Models?
 
 Foundation models are large-scale neural networks trained on vast amounts of data that serve as the base for a wide range of downstream tasks. They learn general representations of language (or images, or code) during pre-training, and can then be adapted through fine-tuning, prompting, or augmentation techniques like RAG.
 
 Key milestones in this space: GPT-2 demonstrated translation, summarization, and basic conversation. GPT-3 scaled to 175 billion parameters and could generate creative content — it became a canonical example of a foundation model for NLP. GPT-4o added true multi-modal capabilities, processing image, sound, and text natively. On the open-source side, models like LLaMA 3, Mistral, and Qwen now offer competitive quality with full deployment flexibility.
 
-### The Core Pitfalls of LLMs That RAG Addresses
+#### The Core Pitfalls of LLMs That RAG Addresses
 
 LLMs are powerful, but they are not magic. They have fundamental limitations that RAG directly mitigates:
 
@@ -98,15 +98,15 @@ RAG mitigates all three by grounding the model's output in retrieved evidence, m
 
 ---
 
-## 1. What is RAG & How It Works
+### 1. What is RAG & How It Works
 
-### The Core Concept
+#### The Core Concept
 
 RAG (Retrieval-Augmented Generation) combines two distinct processes into one system: (1) **retrieve** relevant information from a collection of documents, and (2) **generate** an accurate response by using that retrieved information as context. It enables real-time context injection, instead of relying solely on what the LLM learned during pre-training.
 
 One thing I always emphasize to teams getting started: there is no single "go-to framework" to be used as a reference. Every RAG system must be monitored and refined on an ongoing basis post-deployment. The first version is never the final version.
 
-### The Two Core Pipelines
+#### The Two Core Pipelines
 
 Every RAG system has two pipelines:
 
@@ -114,7 +114,7 @@ Every RAG system has two pipelines:
 
 **Query Pipeline (online):** Takes the user's question, embeds it, retrieves the most relevant chunks from the knowledge base, and feeds them to the LLM alongside the query to generate a grounded response.
 
-### How Vector Embeddings Work Under the Hood
+#### How Vector Embeddings Work Under the Hood
 
 This is one of the most important concepts to internalize:
 
@@ -124,7 +124,7 @@ This is one of the most important concepts to internalize:
 - Each time you store a vector embedding, you also store a reference to the actual document (a URL, document ID, or file path). This reference is what allows you to retrieve and display the original source.
 - At query time, the user's question is embedded using the same model, and the vector database finds the stored vectors closest to the query vector (nearest-neighbor search).
 
-### Types of External Sources
+#### Types of External Sources
 
 RAG is source-agnostic. Common external knowledge sources include:
 
@@ -137,9 +137,9 @@ The choice of source type affects every downstream decision: parsing, chunking, 
 
 ---
 
-## 2. RAG vs. Prompt Engineering vs. Fine-Tuning
+### 2. RAG vs. Prompt Engineering vs. Fine-Tuning
 
-### Choosing the Right Approach
+#### Choosing the Right Approach
 
 These three techniques are not mutually exclusive, but they serve different purposes. Here's how they compare:
 
@@ -153,29 +153,29 @@ These three techniques are not mutually exclusive, but they serve different purp
 | **Cost** | Lowest (no infrastructure) | Medium (retrieval infrastructure + LLM calls) | Highest upfront (training compute), lower per-query |
 | **Latency** | Lowest | Higher (retrieval step adds latency) | Similar to base model |
 
-### Combining Approaches
+#### Combining Approaches
 
 Production systems often layer all three. A common pattern I've seen work well: fine-tune a model to understand your domain's terminology and output format, then use RAG to inject current facts at runtime, with prompt engineering to control grounding behavior and output structure. Each technique reinforces the others.
 
-### When Fine-Tuning Beats RAG
+#### When Fine-Tuning Beats RAG
 
 Fine-tuning wins when: the domain is narrow and stable (e.g., a company's coding standards), you need the model to internalize patterns rather than look up facts (e.g., writing in a specific brand voice), per-query cost must be minimized at high volume, or you need lower latency (no retrieval step). RAG wins when: knowledge changes frequently, source attribution matters, the corpus is large, or you need to avoid retraining.
 
 ---
 
-# Part II — System Design
+## Part II — System Design
 
 ---
 
-## 3. Problem Framing
+### 3. Problem Framing
 
 Before writing a single line of code, the most important step is understanding *whether* RAG is the right tool — and how to scope it correctly.
 
-### Start with the Failure Cost
+#### Start with the Failure Cost
 
 The first question to answer: "What happens when the system gives a wrong answer versus no answer?" In a medical or legal context, a confident wrong answer is catastrophic — the system should say "I don't know" and escalate. In a customer-support FAQ, a slightly imprecise answer may still be valuable. The failure cost determines how aggressive your retrieval thresholds are, whether you require source citations, and how much you invest in guardrails.
 
-### Classify the Query Type
+#### Classify the Query Type
 
 Queries fall into several categories that directly affect retrieval and generation design:
 
@@ -186,7 +186,7 @@ Queries fall into several categories that directly affect retrieval and generati
 
 Understanding the query mix tells you whether you need a simple retriever, a hybrid retrieval pipeline, or a full agentic system with RAG as one component.
 
-### How Data Shape Influences Architecture
+#### How Data Shape Influences Architecture
 
 The format of your source data changes every layer of the pipeline:
 
@@ -196,7 +196,7 @@ The format of your source data changes every layer of the pipeline:
 - **Graphs and relational data** benefit from knowledge-graph-augmented RAG (GraphRAG) rather than flat vector search.
 - **Real-time data** (stock prices, sensor feeds) requires streaming ingestion and freshness guarantees.
 
-### Static Knowledge vs. Live Data
+#### Static Knowledge vs. Live Data
 
 Ask: "Is freshness critical?" If the knowledge base changes hourly (e.g., inventory, pricing), you need an incremental re-indexing pipeline with near-real-time ingestion. If the corpus is stable (e.g., product manuals, regulations), batch re-indexing on a schedule is fine.
 
@@ -204,28 +204,28 @@ Ask: "Is freshness critical?" If the knowledge base changes hourly (e.g., invent
 
 ---
 
-## 4. When NOT to Use RAG
+### 4. When NOT to Use RAG
 
 Knowing when RAG is overkill is just as important as knowing how to build it.
 
-### Consider Alternatives When...
+#### Consider Alternatives When...
 
 - **The knowledge base is small and stable.** If you have fewer than ~50 pages of content that rarely changes, you may be able to stuff the entire corpus into the LLM's context window. Simpler, cheaper, no retrieval pipeline to maintain.
 - **High-latency tolerance exists.** If users can wait and you don't need real-time answers, a fine-tuned model that has already internalized the knowledge may be cheaper long-term.
 - **Fine-tuning is cheaper long-term.** For narrow, stable domains (e.g., a company's internal terminology or coding standards), fine-tuning the base model may outperform RAG in both quality and cost at scale.
 - **The task is purely generative.** Creative writing, brainstorming, and open-ended generation don't benefit from retrieval — they need creativity, not facts.
 
-### Warning Signs That RAG Is Being Misapplied
+#### Warning Signs That RAG Is Being Misapplied
 
 Red flags I've seen in practice: the knowledge base fits in a single prompt, retrieval adds latency but no measurable quality gain, the team spends more time debugging retrieval failures than improving answers, or the use case is primarily about style/tone rather than factual accuracy.
 
 ---
 
-## 5. Failure Scenarios & Challenges
+### 5. Failure Scenarios & Challenges
 
 Understanding failure modes is essential for building resilient systems. This section combines the classic failure taxonomy with the seven specific challenges that practitioners encounter when building RAG systems.
 
-### The Six Primary Failure Modes
+#### The Six Primary Failure Modes
 
 **1. Wrong answer from the correct document.**
 The retriever found the right source, but the generator misinterpreted or hallucinated from it. Fix: Improve prompt grounding instructions, reduce chunk size so less irrelevant context bleeds in, or use a more capable generation model.
@@ -245,7 +245,7 @@ The first query takes significantly longer than subsequent ones. Fix: Pre-warm e
 **6. Rising costs over time.**
 As the corpus grows, embedding computation, storage, and retrieval costs escalate. Fix: Implement tiered storage (hot/warm/cold), prune stale embeddings, use dimensionality reduction, and set cost budgets per request.
 
-### The Seven Practical Challenges of Building RAG
+#### The Seven Practical Challenges of Building RAG
 
 These map to specific failure points in the pipeline, each with a targeted fix:
 
@@ -259,7 +259,7 @@ These map to specific failure points in the pipeline, each with a targeted fix:
 | **Incorrect Specificity** | The answer is too broad or too narrow for the question asked. | Build an interactive query-generation layer that suggests alternate queries with additional context. Use query classification to adjust retrieval depth. |
 | **Incomplete** | The answer addresses part of the question but misses key aspects. | Provide additional training on diverse summarization data. Use query decomposition to ensure all sub-questions are addressed. |
 
-### Operational Issues to Anticipate
+#### Operational Issues to Anticipate
 
 Beyond the core challenges, three operational concerns affect every production RAG system:
 
@@ -269,15 +269,15 @@ Beyond the core challenges, three operational concerns affect every production R
 
 ---
 
-## 6. Data & Ingestion Layer
+### 6. Data & Ingestion Layer
 
 The quality of a RAG system is bounded by the quality of its ingestion pipeline.
 
-### Documents vs. Chunks
+#### Documents vs. Chunks
 
 A document is the original source artifact (a PDF, web page, database row, Slack thread). A chunk is a segment of that document, sized and structured for embedding and retrieval. The mapping is one-to-many: one document produces many chunks. Good systems maintain the lineage — every chunk should trace back to its source document, page number, and timestamp.
 
-### Choosing a Chunking Strategy
+#### Choosing a Chunking Strategy
 
 Chunking strategy is one of the highest-leverage decisions in a RAG pipeline. There are five primary approaches:
 
@@ -291,15 +291,15 @@ Chunking strategy is one of the highest-leverage decisions in a RAG pipeline. Th
 
 **Hierarchical Chunking.** Create parent chunks that contain child chunks. Each child stores its parent's context. Enables multi-resolution retrieval — search at the child level, return at the parent level for context. Use when: you need both precision (small chunks for matching) and context (large chunks for generation).
 
-### Justifying Chunk Overlap
+#### Justifying Chunk Overlap
 
 Overlap prevents information loss at chunk boundaries. The right overlap depends on content type: for narrative text, 10-15% overlap preserves sentence continuity. For structured content (lists, tables), overlap can cause duplication and should be minimized. Measure overlap effectiveness by checking whether boundary queries (questions whose answers span two chunks) are answered correctly.
 
-### Metadata Schema Design
+#### Metadata Schema Design
 
 Define it early — before ingestion, not after. A good metadata schema includes: source document ID, title, creation/modification date, author or authority level, section or heading hierarchy, document type/category, version number, and any domain-specific tags (e.g., product line, regulatory jurisdiction). Metadata enables pre-retrieval filtering, which is often more effective than relying solely on embedding similarity.
 
-### Re-Indexing Strategy
+#### Re-Indexing Strategy
 
 Plan for it from day one. A re-indexing strategy covers: when to re-index (on document update, on schedule, on embedding model change), how to handle in-flight queries during re-index (blue-green index deployment), versioning of indexes (so you can roll back), and how to validate that re-indexing hasn't degraded quality (run your evaluation suite before and after).
 
@@ -307,11 +307,11 @@ Plan for it from day one. A re-indexing strategy covers: when to re-index (on do
 
 ---
 
-## 7. Chunking Strategy
+### 7. Chunking Strategy
 
 This section goes deeper into one of the highest-leverage decisions in any RAG pipeline — how to break documents into retrievable pieces. There is no one-size-fits-all approach; the right strategy depends on text structure, embedding model input length, LLM context length, and the types of questions you expect.
 
-### Fixed-Size Chunking
+#### Fixed-Size Chunking
 
 ```
 Document (1400 tokens) → Tokenize → Set Parameters (size=500, overlap=50)
@@ -323,7 +323,7 @@ Document (1400 tokens) → Tokenize → Set Parameters (size=500, overlap=50)
 
 **Pros:** Deterministic, fast, easy to parallelize. **Cons:** Ignores sentence/paragraph boundaries, can split mid-thought.
 
-### Recursive Chunking
+#### Recursive Chunking
 
 ```
 Document → Split by sentences → Still too big?
@@ -333,7 +333,7 @@ Document → Split by sentences → Still too big?
 
 **Pros:** Respects natural language boundaries better than fixed-size. **Cons:** Chunk sizes are variable, which can affect retrieval consistency.
 
-### Semantic Chunking
+#### Semantic Chunking
 
 ```
 Document → Split into sentences → Generate embeddings per sentence
@@ -343,7 +343,7 @@ Document → Split into sentences → Generate embeddings per sentence
 
 **Pros:** Chunks are semantically coherent. **Cons:** Requires an embedding pass at ingestion time, sensitive to embedding model quality.
 
-### LLM-Based (Agentic) Chunking
+#### LLM-Based (Agentic) Chunking
 
 ```
 Document → Feed to LLM → LLM decides split points
@@ -353,7 +353,7 @@ Document → Feed to LLM → LLM decides split points
 
 **Pros:** Highest semantic quality, can add contextual summaries to each chunk. **Cons:** Expensive, slow, non-deterministic.
 
-### Hierarchical Chunking
+#### Hierarchical Chunking
 
 ```
 Document → Create Parent Chunks → Each Parent produces Child Chunks
@@ -363,7 +363,7 @@ Document → Create Parent Chunks → Each Parent produces Child Chunks
 
 **Pros:** Enables multi-resolution retrieval. Search at child granularity, retrieve at parent granularity for richer context. **Cons:** More complex indexing and retrieval logic.
 
-### Chunk Size Tradeoffs — The Four-Way Tension
+#### Chunk Size Tradeoffs — The Four-Way Tension
 
 Chunk size is not a single optimization — it's a four-way tradeoff:
 
@@ -375,7 +375,7 @@ Chunk size is not a single optimization — it's a four-way tradeoff:
 | **LLM Cost & Latency** | Higher (more tokens per chunk) | Lower (fewer tokens per chunk) |
 | **Hallucination Risk** | Higher (more irrelevant context) | Lower but risk of insufficient context |
 
-### Factors That Influence Chunking Strategy
+#### Factors That Influence Chunking Strategy
 
 There is no one-size-fits-all — four factors determine the right approach:
 
@@ -384,23 +384,23 @@ There is no one-size-fits-all — four factors determine the right approach:
 - **LLM Context Window:** LLMs have a finite context window. Chunk size affects how many chunks you can feed the LLM simultaneously. With a 4K context budget and 500-token chunks, you get ~8 chunks; with 200-token chunks, you get ~20.
 - **Type of Questions:** Factual questions ("What is the return policy?") benefit from small, precise chunks. Reasoning questions ("Compare plan A vs. plan B") benefit from larger chunks that preserve more context.
 
-### Common Chunking Implementations
+#### Common Chunking Implementations
 
 In LangChain, the primary splitters map to these strategies: `CharacterTextSplitter` (fixed-size by character count), `RecursiveCharacterTextSplitter` (recursive splitting — the most commonly used default), and `SentenceTransformersTokenTextSplitter` (splits based on token count for a specific model). The `RecursiveCharacterTextSplitter` works by trying a hierarchy of separators (paragraphs → sentences → words → characters) and is the recommended starting point for most use cases.
 
 ---
 
-## 8. Embeddings Strategy
+### 8. Embeddings Strategy
 
-### Offline Document Embeddings, Online Query Embeddings
+#### Offline Document Embeddings, Online Query Embeddings
 
 This is the standard pattern: document embeddings are computed offline (at ingestion time) and stored in the vector database. Query embeddings are computed online (at query time) because they change with every request. This asymmetry is fundamental to RAG's scalability.
 
-### Same Model for Documents and Queries?
+#### Same Model for Documents and Queries?
 
 In most cases, yes — the same model should encode both documents and queries to ensure they live in the same vector space. However, some architectures use asymmetric models (e.g., a larger model for documents and a lighter one for queries) to optimize for latency. If you do this, the models must be trained together or be compatible (e.g., from the same model family).
 
-### Choosing Between Embedding Models
+#### Choosing Between Embedding Models
 
 Consider these dimensions:
 
@@ -409,13 +409,13 @@ Consider these dimensions:
 - **Cost:** API-based models (OpenAI, Cohere, Voyage) charge per token. Open-source models (Sentence Transformers, BGE, E5) have zero marginal cost but require hosting.
 - **Multilingual support:** If your corpus spans languages, choose a multilingual model (e.g., `multilingual-e5-large`).
 
-### Handling Embedding Model Upgrades
+#### Handling Embedding Model Upgrades
 
 Changing your embedding model means all existing vectors become incompatible with new query vectors. You must re-embed the entire corpus. Plan for this by: maintaining the full text alongside vectors (so you can re-embed without re-ingesting), running the new model in shadow mode (dual-index) before cutting over, and tracking the embedding model version in your metadata schema.
 
 > **Practitioner's note:** Always factor re-embedding costs into your embedding model decision. I've seen teams choose a model without considering the migration cost, only to find themselves locked in.
 
-### Why Embeddings Matter Beyond Basic Search
+#### Why Embeddings Matter Beyond Basic Search
 
 Embeddings solve semantic meaning rather than surface-level keyword matches. This enables several critical RAG capabilities:
 
@@ -424,15 +424,15 @@ Embeddings solve semantic meaning rather than surface-level keyword matches. Thi
 - **In-Context Learning:** Selecting the most relevant few-shot examples to include in the prompt.
 - **Tool Fetching:** In agentic systems, embeddings help select which tool or API to call based on the user's request.
 
-### Practical Guide for Selecting an Embedding Model
+#### Practical Guide for Selecting an Embedding Model
 
 Follow this decision process: (1) Start with the MTEB leaderboard to identify top-performing models for your task type (retrieval, classification, etc.). (2) Filter by your constraints — dimension limit, latency budget, and whether you need open-source vs. API-based. (3) Test the top 2-3 candidates on a sample of your actual data with your actual queries. (4) Measure not just accuracy but also embedding speed, storage cost, and how well the model handles your domain's terminology. Models that rank #1 on benchmarks may not rank #1 on your specific corpus.
 
 ---
 
-## 9. Searching, Indexing & Vector Databases
+### 9. Searching, Indexing & Vector Databases
 
-### Search Algorithms That Power RAG Retrieval
+#### Search Algorithms That Power RAG Retrieval
 
 RAG retrieval relies on a combination of sparse and dense search algorithms:
 
@@ -441,7 +441,7 @@ RAG retrieval relies on a combination of sparse and dense search algorithms:
 - **Dense Retrieval (Embedding-based):** Uses deep learning models (like BERT-derived encoders) to interpret the query's intent and context, representing both queries and documents as dense vectors. Excels at semantic matching but can miss exact terms.
 - **Hybrid Search:** Combines BM25 (sparse) with dense retrieval and merges results using Reciprocal Rank Fusion (RRF) or learned score combination. This is the recommended default for production RAG systems.
 
-### Choosing the Right Vector Database
+#### Choosing the Right Vector Database
 
 Vector database selection has significant long-term implications. Evaluate along these dimensions:
 
@@ -470,13 +470,13 @@ For a detailed feature-by-feature comparison, the [Superlinked vector database c
 
 ---
 
-## 10. Retrieval Design
+### 10. Retrieval Design
 
-### Vector Search Alone or Hybrid Search?
+#### Vector Search Alone or Hybrid Search?
 
 Almost always hybrid. Pure vector search excels at semantic similarity but misses exact-match queries (e.g., error codes, product SKUs, proper nouns). Hybrid search combines dense retrieval (vector similarity) with sparse retrieval (BM25/keyword matching) and merges results. Reciprocal Rank Fusion (RRF) is a common and effective merging strategy.
 
-### Recall vs. Precision
+#### Recall vs. Precision
 
 This should be an explicit, discussed trade-off:
 
@@ -485,23 +485,23 @@ This should be an explicit, discussed trade-off:
 
 The right balance depends on your reranking budget and latency SLA.
 
-### Top-K vs. Threshold-Based Retrieval
+#### Top-K vs. Threshold-Based Retrieval
 
 **Top-K** always returns K results, regardless of quality. Good when you always want to show something. **Threshold-based** only returns results above a similarity score cutoff. Good when "no answer" is better than a bad answer (e.g., medical, legal). In practice, combine both: retrieve Top-K, then filter by threshold, and gracefully handle the case where nothing passes the filter.
 
-### Metadata Filters: Before or After Vector Search?
+#### Metadata Filters: Before or After Vector Search?
 
 Before (pre-filtering) when possible. Pre-filtering reduces the search space, making retrieval faster and more precise. For example, if the user asks about "2024 tax rules," filter to documents tagged with year=2024 before running vector search. Post-filtering (retrieve then filter) is a fallback when your vector database doesn't support efficient pre-filtering.
 
 ---
 
-## 11. Reranking & Context Selection
+### 11. Reranking & Context Selection
 
-### Why Reranking Matters
+#### Why Reranking Matters
 
 Initial retrieval (especially from ANN indexes) optimizes for speed, not precision. A reranker re-scores the top candidates with a more expensive but more accurate model.
 
-### Cross-Encoder vs. Lightweight Reranker
+#### Cross-Encoder vs. Lightweight Reranker
 
 **Cross-encoders** (e.g., Cohere Rerank, `ms-marco-MiniLM`) jointly encode the query and each candidate, producing highly accurate relevance scores. They are slow (O(n) forward passes for n candidates). Use when precision matters more than latency.
 
@@ -509,15 +509,15 @@ Initial retrieval (especially from ANN indexes) optimizes for speed, not precisi
 
 A common pattern: retrieve Top-50 with vector search, rerank to Top-5 with a cross-encoder.
 
-### Handling Duplicate and Near-Duplicate Chunks
+#### Handling Duplicate and Near-Duplicate Chunks
 
 Deduplication is critical — returning three near-identical chunks wastes your context window. Strategies include: exact deduplication (hash-based), near-duplicate detection (MinHash, SimHash), and source-level deduplication (only return one chunk per source document). Apply deduplication after reranking to preserve the best-scored variant.
 
-### Context Ordering Logic
+#### Context Ordering Logic
 
 The order in which you place retrieved chunks in the prompt matters. Research shows LLMs pay more attention to content at the beginning and end of the context window ("lost in the middle" effect). Place the most relevant chunks first and last, less relevant ones in the middle. Alternatively, chronologically order chunks from the same document to preserve narrative flow.
 
-### Token Budget Management
+#### Token Budget Management
 
 The token budget is the maximum number of tokens allocated to retrieved context in the prompt. Enforce it because: overstuffing the context degrades generation quality, each additional token costs money, and there's diminishing returns after a certain number of chunks. A typical budget: 2,000–4,000 tokens of context for a question-answering task.
 
@@ -525,13 +525,13 @@ The token budget is the maximum number of tokens allocated to retrieved context 
 
 ---
 
-## 12. Prompt & Grounding Strategy
+### 12. Prompt & Grounding Strategy
 
-### Separation of Prompt and Architecture
+#### Separation of Prompt and Architecture
 
 The prompt is the interface between retrieval and generation. Changing the prompt should not require changing the retrieval pipeline, and vice versa. This separation enables independent optimization: you can A/B test prompts without touching retrieval, and upgrade retrieval without rewriting prompts.
 
-### Enforcing Grounding
+#### Enforcing Grounding
 
 Grounding instructions tell the LLM to base its answer solely on the retrieved context. Effective techniques:
 
@@ -539,7 +539,7 @@ Grounding instructions tell the LLM to base its answer solely on the retrieved c
 - Citation enforcement: "For each claim in your answer, cite the source chunk in [brackets]."
 - Structured output: Force the model to return a JSON object with `answer` and `sources` fields, making it harder to hallucinate without a source.
 
-### Defining Failure Behavior
+#### Defining Failure Behavior
 
 The system must know what to do when retrieval fails or returns low-confidence results. Define explicit fallback behaviors:
 
@@ -553,9 +553,9 @@ Never let the LLM silently hallucinate when retrieval fails.
 
 ---
 
-## 13. Generation Layer
+### 13. Generation Layer
 
-### Choosing the Generation Model
+#### Choosing the Generation Model
 
 Balance size vs. cost vs. quality:
 
@@ -563,7 +563,7 @@ Balance size vs. cost vs. quality:
 - **Medium models** (GPT-4o-mini, Claude Sonnet, Gemini Flash) offer excellent quality-to-cost ratios. The default choice for most production systems.
 - **Small/distilled models** (Llama 3, Mistral, Phi) can be self-hosted for cost control and data privacy but may need more prompt engineering.
 
-### Temperature Strategy
+#### Temperature Strategy
 
 Temperature should vary by query type within the same system:
 
@@ -573,7 +573,7 @@ Temperature should vary by query type within the same system:
 
 Implement this as a query classifier → temperature mapper in your orchestration layer. Always make temperature a configurable parameter, not a hardcoded value.
 
-### Streaming vs. Blocking Response
+#### Streaming vs. Blocking Response
 
 **Streaming** (token-by-token delivery) reduces perceived latency and is preferred for user-facing applications. **Blocking** (wait for full response) is needed when you must post-process the response (e.g., run output guardrails, format citations) before showing it to the user. A hybrid approach: stream the response to the UI while simultaneously running guardrails, and retract/flag the response if guardrails trigger.
 
@@ -581,11 +581,11 @@ Implement this as a query classifier → temperature mapper in your orchestratio
 
 ---
 
-## 14. Reducing Hallucinations Through Prompting
+### 14. Reducing Hallucinations Through Prompting
 
 Beyond retrieval quality and model selection, specific prompting techniques can significantly reduce hallucinations at the generation layer.
 
-### Five Key Techniques
+#### Five Key Techniques
 
 **1. Chain of Thought (CoT).** Instruct the LLM to reason step-by-step before giving a final answer. By externalizing its reasoning process, the model is less likely to skip logical steps or fabricate conclusions. In RAG, combine CoT with grounding: "For each step, cite which retrieved passage supports your reasoning."
 
@@ -597,35 +597,35 @@ Beyond retrieval quality and model selection, specific prompting techniques can 
 
 **5. Expert Prompting.** Frame the model as a domain expert: "You are a senior compliance officer reviewing regulatory documents. Answer only based on the provided documents and flag any areas of uncertainty." This persona-setting technique primes the model to be more cautious and domain-appropriate in its responses.
 
-### Combining Techniques in Production
+#### Combining Techniques in Production
 
 The most effective approach layers multiple techniques. A pattern I've seen work well: use CoT for reasoning transparency, enforce grounding with citation requirements, add CoVe as a post-generation quality check, and wrap it all with expert prompting to set domain expectations. This layered approach addresses hallucinations at multiple points in the generation process.
 
 ---
 
-# Part III — Operations & Architecture
+## Part III — Operations & Architecture
 
 ---
 
-## 15. Evaluation Metrics
+### 15. Evaluation Metrics
 
-### The Most Important Principle: Evaluate Retrieval and Generation Separately
+#### The Most Important Principle: Evaluate Retrieval and Generation Separately
 
 A combined "accuracy" score tells you nothing about where to improve. Separate evaluation is essential.
 
-### Retrieval Metrics
+#### Retrieval Metrics
 
 - **Retrieval Precision (Precision@K):** Of the K chunks retrieved, what fraction is actually relevant? High precision means less noise in the context.
 - **Retrieval Recall (Recall@K):** Of all relevant chunks in the corpus, what fraction did you retrieve? High recall means you didn't miss critical information.
 - **Mean Reciprocal Rank (MRR):** How high does the first relevant result rank? Important for user-facing search.
 
-### Generation Metrics
+#### Generation Metrics
 
 - **Faithfulness:** Does the answer stay grounded in the retrieved context? Measured by checking whether each claim in the answer can be attributed to a source chunk. Tools: RAGAS, DeepEval, TruLens.
 - **Answer Relevancy:** Does the answer actually address the user's question? A faithful answer to the wrong question is still a failure.
 - **Hallucination Rate:** What percentage of claims in the answer have no support in the retrieved context?
 
-### End-to-End Metrics
+#### End-to-End Metrics
 
 - **Accuracy:** Is the final answer correct? Requires ground-truth labels.
 - **Latency:** End-to-end time from query to response. Break it down: embedding time + retrieval time + reranking time + generation time.
@@ -635,9 +635,9 @@ A combined "accuracy" score tells you nothing about where to improve. Separate e
 
 ---
 
-## 16. Observability & Debugging
+### 16. Observability & Debugging
 
-### What to Log
+#### What to Log
 
 Every layer of the pipeline should emit structured logs:
 
@@ -647,7 +647,7 @@ Every layer of the pipeline should emit structured logs:
 - **Index health:** Monitor index size, query latency percentiles (p50, p95, p99), and storage utilization.
 - **Cold-start metrics:** Track first-query latency separately from steady-state latency.
 
-### Proactive Failure Detection
+#### Proactive Failure Detection
 
 Build dashboards that surface anomalies before users complain:
 
@@ -660,9 +660,9 @@ Build dashboards that surface anomalies before users complain:
 
 ---
 
-## 17. Scaling & Performance
+### 17. Scaling & Performance
 
-### Handling Growing Index Size
+#### Handling Growing Index Size
 
 As the corpus grows, vector search slows and costs rise. Mitigation strategies:
 
@@ -671,7 +671,7 @@ As the corpus grows, vector search slows and costs rise. Mitigation strategies:
 - **Tiered storage:** Keep recent/popular embeddings in hot storage (in-memory), archive older ones to warm/cold storage (disk-based).
 - **Dimensionality reduction:** Use techniques like PCA or Matryoshka embeddings to reduce vector size while preserving most retrieval quality.
 
-### Mitigating Cold Start Latency
+#### Mitigating Cold Start Latency
 
 Cold start is the delay when the first query hits an unwarmed system:
 
@@ -680,7 +680,7 @@ Cold start is the delay when the first query hits an unwarmed system:
 - Use model warm-up scripts that run a few dummy inferences before accepting traffic.
 - Deploy embedding models as persistent services (not serverless functions that scale to zero).
 
-### Caching Strategy
+#### Caching Strategy
 
 Cache at two levels:
 
@@ -689,19 +689,19 @@ Cache at two levels:
 
 Cache hit rates of 20-40% are common in enterprise Q&A systems and dramatically reduce cost and latency.
 
-### Parallel Retrieval
+#### Parallel Retrieval
 
 For complex queries that decompose into sub-queries, run retrievals in parallel across different index shards or different query reformulations. Merge results before reranking. This reduces wall-clock latency for multi-hop questions.
 
-### Cost Controls Per Request
+#### Cost Controls Per Request
 
 Implement per-request budgets that cap: the number of retrieval calls, the number of reranking candidates, the context token budget sent to the LLM, and the maximum generation length. This prevents runaway costs from adversarial or unusually complex queries.
 
 ---
 
-## 18. Infrastructure & Kubernetes
+### 18. Infrastructure & Kubernetes
 
-### Kubernetes as the Runtime Control Plane
+#### Kubernetes as the Runtime Control Plane
 
 Kubernetes is the runtime control plane for your RAG system. It doesn't "do RAG" — it orchestrates all the pieces so they are scalable, reliable, and secure. A production RAG deployment on Kubernetes manages:
 
@@ -712,7 +712,7 @@ Kubernetes is the runtime control plane for your RAG system. It doesn't "do RAG"
 - **Guardrails Service:** Input and output validation. Must be low-latency to avoid adding to response time.
 - **Background Workers:** Handle ingestion, re-indexing, embedding computation, and feedback processing asynchronously.
 
-### Structuring RAG Microservices on Kubernetes
+#### Structuring RAG Microservices on Kubernetes
 
 The key principle is independent scalability. Each component has different resource profiles:
 
@@ -721,7 +721,7 @@ The key principle is independent scalability. Each component has different resou
 - **LLM inference (self-hosted):** The most resource-hungry component. Deploy vLLM or TGI on dedicated GPU nodes with autoscaling. Use node affinity to ensure GPU pods land on GPU nodes.
 - **Orchestration layer:** CPU-only, lightweight. Handles query routing, prompt assembly, and response formatting. Deploy as a standard deployment with HPA based on CPU/request count.
 
-### Kubernetes-Native Patterns for RAG
+#### Kubernetes-Native Patterns for RAG
 
 Several patterns are especially relevant:
 
@@ -733,17 +733,17 @@ Several patterns are especially relevant:
 
 ---
 
-## 19. Security & Compliance
+### 19. Security & Compliance
 
-### Authorization: Before Retrieval, Not After
+#### Authorization: Before Retrieval, Not After
 
 Implement AuthZ before retrieval. When a user queries the system, filter the searchable index to only include documents that the user is authorized to access. This prevents the system from retrieving and potentially leaking information from unauthorized documents, even in the prompt.
 
-### Row-Level vs. Document-Level Access Control
+#### Row-Level vs. Document-Level Access Control
 
 **Document-level access** is simpler: tag each document with an access control list (ACL) and filter at query time. Suitable when entire documents are either accessible or not. **Row-level access** is needed when a single document contains information at different sensitivity levels (e.g., a database table where different rows belong to different departments). This requires chunk-level ACL tagging at ingestion time.
 
-### PII in the RAG Pipeline
+#### PII in the RAG Pipeline
 
 PII management must be baked into the pipeline, not bolted on:
 
@@ -752,7 +752,7 @@ PII management must be baked into the pipeline, not bolted on:
 - **At generation:** Add guardrails that detect and redact PII in the generated response.
 - **In logs:** Ensure that query logs and retrieved chunks are stored in compliance with data retention policies. Mask PII in logs or use a separate, access-controlled logging pipeline.
 
-### Audit Trail
+#### Audit Trail
 
 Every query should produce an audit record containing: who queried (user identity), what was queried (the question), what was retrieved (chunk IDs, sources, scores), what was generated (the answer), and when it happened (timestamp). This audit trail supports compliance reviews, debugging, and continuous improvement.
 
@@ -760,11 +760,11 @@ Every query should produce an audit record containing: who queried (user identit
 
 ---
 
-## 20. Enterprise RAG Architecture (End-to-End)
+### 20. Enterprise RAG Architecture (End-to-End)
 
 A production-grade enterprise RAG system integrates the following components into a cohesive pipeline:
 
-### Ingestion Flow
+#### Ingestion Flow
 
 ```
 Domain/Org Documents
@@ -776,7 +776,7 @@ Domain/Org Documents
   → Vector Database (kNN index) + Document Store (original text)
 ```
 
-### Query Flow
+#### Query Flow
 
 ```
 User Query
@@ -793,7 +793,7 @@ User Query
   → Filtered Response → User
 ```
 
-### Supporting Infrastructure
+#### Supporting Infrastructure
 
 - **Memory Store:** Maintains conversation history and session state for multi-turn interactions.
 - **Feedback Storage:** Captures user ratings and corrections for continuous improvement.
@@ -801,7 +801,7 @@ User Query
 - **LLM Fine-Tuning Pipeline:** Periodically retrains or adapts the generation model based on feedback.
 - **Observability Layer:** Monitors all components; feeds dashboards and alerts.
 
-### Common Failure Points in the Pipeline
+#### Common Failure Points in the Pipeline
 
 The enterprise RAG architecture has specific points where failures commonly occur:
 
@@ -813,15 +813,15 @@ The enterprise RAG architecture has specific points where failures commonly occu
 
 ---
 
-# Part IV — Advanced Topics
+## Part IV — Advanced Topics
 
 ---
 
-## 21. RAG vs. MCP vs. AI Agents
+### 21. RAG vs. MCP vs. AI Agents
 
 Understanding where RAG sits relative to other AI architecture patterns is essential for making the right design choices.
 
-### RAG (Retrieval-Augmented Generation)
+#### RAG (Retrieval-Augmented Generation)
 
 **What it is:** LLMs augmented with retrieved knowledge at runtime. The system retrieves relevant information from a knowledge base and feeds it to the LLM alongside the query.
 
@@ -829,19 +829,19 @@ Understanding where RAG sits relative to other AI architecture patterns is essen
 
 **Best for:** Factual Q&A, knowledge-grounded generation, enterprise search, compliance-sensitive applications where answers must be traceable to sources.
 
-### MCP (Model Context Protocol)
+#### MCP (Model Context Protocol)
 
 **What it is:** A standardized protocol for LLMs to use external tools and resources. MCP defines a client-server architecture where MCP clients (Claude Desktop, IDEs, AI tools) communicate with MCP servers that provide access to web APIs, databases, and file systems.
 
 **Best for:** Tool integration, giving LLMs standardized access to external services without custom integrations for each tool.
 
-### AI Agents
+#### AI Agents
 
 **What they are:** LLMs that take actions and make decisions autonomously. Agents have an observation-reasoning-action loop, can delegate tasks, invoke tools, access memory, and interact with their environment.
 
 **Best for:** Complex, multi-step workflows that require planning, tool use, and autonomous decision-making.
 
-### When to Combine Them
+#### When to Combine Them
 
 In practice, these patterns are complementary:
 
@@ -853,11 +853,11 @@ While Agentic AI continues to evolve, it's RAG that has powered some of the most
 
 ---
 
-## 22. Advanced RAG Patterns
+### 22. Advanced RAG Patterns
 
 Beyond the basic retrieve-then-generate pipeline, several advanced patterns address specific weaknesses.
 
-### HyDE (Hypothetical Document Embeddings)
+#### HyDE (Hypothetical Document Embeddings)
 
 HyDE addresses the query-document mismatch problem. Instead of embedding the raw user query (which is often short and vague), you ask the LLM to generate a hypothetical answer, then embed that hypothetical answer and use it as the search query. Because the hypothetical answer is longer and closer in style to actual documents, it often retrieves better results.
 
@@ -865,7 +865,7 @@ HyDE addresses the query-document mismatch problem. Instead of embedding the raw
 
 **Trade-off:** Adds one LLM call of latency, but can dramatically improve retrieval quality for vague or short queries.
 
-### Query Decomposition
+#### Query Decomposition
 
 Complex questions often contain multiple sub-questions. Query decomposition breaks a single complex query into simpler sub-queries, runs retrieval for each, and merges the results before generation.
 
@@ -873,31 +873,31 @@ Complex questions often contain multiple sub-questions. Query decomposition brea
 
 **When to use:** Multi-hop questions, comparison questions, questions that span multiple documents or time periods.
 
-### Self-RAG
+#### Self-RAG
 
 Self-RAG adds a self-reflection step where the LLM evaluates whether it actually needs retrieval, and after generating an answer, critiques whether the answer is faithful to the sources. The model can decide to: skip retrieval (if it already knows the answer), retrieve and generate, or retrieve again with a different query if the first attempt was unsatisfactory.
 
 This pattern reduces unnecessary retrieval calls and improves answer quality through iterative refinement.
 
-### Corrective RAG (CRAG)
+#### Corrective RAG (CRAG)
 
 CRAG adds a verification step after retrieval. A lightweight model evaluates whether the retrieved documents are actually relevant to the query. If they are not relevant, the system can: rewrite the query and try again, fall back to web search, or respond with "I don't know." This prevents the generator from being fed irrelevant context and producing hallucinated answers.
 
-### Adaptive RAG
+#### Adaptive RAG
 
 Adaptive RAG dynamically selects the retrieval strategy based on query complexity. A query classifier routes simple queries to direct retrieval, moderate queries to single-step RAG, and complex queries to multi-step agentic RAG with query decomposition. This optimizes the cost-latency-quality trade-off on a per-query basis.
 
 ---
 
-## 23. GraphRAG and Knowledge Graphs
+### 23. GraphRAG and Knowledge Graphs
 
-### When to Use GraphRAG
+#### When to Use GraphRAG
 
 Standard vector RAG works well for local, fact-based questions (answers exist in a single or few chunks). It struggles with global questions that require synthesizing information across the entire corpus, such as "What are the main themes across all customer complaints?" or "How are these three departments connected?"
 
 GraphRAG addresses this by constructing a knowledge graph from the corpus — extracting entities, relationships, and community structures — then querying the graph to retrieve structurally connected information, not just semantically similar text. Knowledge graphs are an important way to store information accurately, though they require significant effort to build — either manually or through LLM-assisted extraction pipelines.
 
-### How GraphRAG Works
+#### How GraphRAG Works
 
 The process has two phases:
 
@@ -905,15 +905,15 @@ The process has two phases:
 
 **Query phase:** User query → Determine if local or global → Local queries search entity neighborhoods → Global queries aggregate community summaries → LLM generates answer from graph-structured context.
 
-### When GraphRAG Is Overkill
+#### When GraphRAG Is Overkill
 
 If your queries are predominantly fact-lookup ("What is X?") and your documents are independent, standard vector RAG is simpler and sufficient. GraphRAG shines when relationships between entities matter, when you need corpus-wide synthesis, or when your domain has a natural graph structure (organizational hierarchies, supply chains, regulatory dependencies).
 
 ---
 
-## 24. Multi-Modal RAG
+### 24. Multi-Modal RAG
 
-### Handling Non-Text Content
+#### Handling Non-Text Content
 
 Real enterprise data includes images, charts, diagrams, and videos alongside text. Multi-modal RAG extends the pipeline to handle these:
 
@@ -921,15 +921,15 @@ Real enterprise data includes images, charts, diagrams, and videos alongside tex
 - **Table extraction:** Use specialized tools (Camelot, Tabula, or LLM-based table extractors) to convert tables into structured formats (markdown, JSON) before chunking.
 - **Audio/video:** Transcribe using speech-to-text (Whisper), then index transcripts. Optionally use video frame analysis for visual content.
 
-### The "Describe-Then-Embed" Pattern
+#### The "Describe-Then-Embed" Pattern
 
 For images and charts: (1) Feed the image to a vision model with the prompt "Describe this image in detail, including all data points if it's a chart." (2) Store both the original image reference and the generated description. (3) Embed the description for retrieval. (4) At generation time, include the description in the context and optionally pass the original image to a multi-modal LLM.
 
 ---
 
-## 25. Guardrails and Safety
+### 25. Guardrails and Safety
 
-### Input Guardrails
+#### Input Guardrails
 
 Input guardrails validate and sanitize user queries before they enter the RAG pipeline:
 
@@ -938,7 +938,7 @@ Input guardrails validate and sanitize user queries before they enter the RAG pi
 - **Query validation:** Reject malformed, excessively long, or empty queries.
 - **Rate limiting:** Prevent abuse through query throttling.
 
-### Output Guardrails
+#### Output Guardrails
 
 Output guardrails validate the generated response before it reaches the user:
 
@@ -948,15 +948,15 @@ Output guardrails validate the generated response before it reaches the user:
 - **Format validation:** Verify the response matches the expected structure (e.g., JSON schema, citation format).
 - **Hallucination detection:** Flag responses that make claims not supported by any retrieved chunk.
 
-### Implementing Guardrails Without Killing Latency
+#### Implementing Guardrails Without Killing Latency
 
 Run lightweight guardrails synchronously (regex-based PII detection, format validation) and heavier guardrails asynchronously (LLM-based faithfulness checks). For streaming responses, use a "stream then validate" pattern: deliver the response to the user immediately but flag it for post-hoc review. If a guardrail triggers, append a correction or warning.
 
 ---
 
-## 26. Agentic RAG
+### 26. Agentic RAG
 
-### What Sets It Apart
+#### What Sets It Apart
 
 Standard RAG follows a fixed pipeline: retrieve → generate. Agentic RAG wraps the RAG pipeline inside an autonomous agent that can reason about whether to retrieve, what to retrieve, and whether the retrieved results are sufficient. The agent can:
 
@@ -966,27 +966,27 @@ Standard RAG follows a fixed pipeline: retrieve → generate. Agentic RAG wraps 
 - Evaluate retrieved results and retry with different strategies.
 - Chain multiple retrieval-generation cycles to answer complex questions.
 
-### When to Use Agentic RAG
+#### When to Use Agentic RAG
 
 Use Agentic RAG when: queries require multi-step reasoning, information is spread across heterogeneous sources (documents + databases + APIs), the system needs to handle ambiguous queries by asking clarifying questions or making assumptions, or when different queries require fundamentally different retrieval strategies.
 
-### Risks to Manage
+#### Risks to Manage
 
 Increased latency (multiple retrieval-generation loops), higher cost (more LLM calls), harder to debug (non-deterministic reasoning paths), and potential for infinite loops if the agent never satisfies its termination criteria. Mitigate by setting hard limits on the number of agent steps, logging every decision, and having clear fallback behavior.
 
 ---
 
-## 27. RAG in Production — Operational Considerations
+### 27. RAG in Production — Operational Considerations
 
-### Versioning Everything
+#### Versioning Everything
 
 Version everything: the corpus (document versions), the embedding model (model ID + weights hash), the index (snapshot ID), the prompt templates (version-controlled in git), and the generation model. This enables reproducibility — given a query and version identifiers, you can reproduce exactly what the system would have answered at any point in time.
 
-### Blue-Green Deployment for RAG Indexes
+#### Blue-Green Deployment for RAG Indexes
 
 When re-indexing your corpus (due to new documents, changed chunking strategy, or embedding model upgrade), build the new index alongside the old one. Run evaluation queries against both. If the new index passes quality gates, switch traffic to it. Keep the old index as a rollback target. This prevents downtime and quality regressions.
 
-### Multi-Tenancy
+#### Multi-Tenancy
 
 In enterprise RAG, different teams or customers need isolated knowledge bases:
 
@@ -994,7 +994,7 @@ In enterprise RAG, different teams or customers need isolated knowledge bases:
 - **Dedicated indexes:** Each tenant gets its own index. More expensive but provides stronger isolation.
 - **Metadata-based filtering:** Store all tenants in one index but filter by tenant ID at query time. Simplest to implement but requires careful access control.
 
-### The Feedback Loop
+#### The Feedback Loop
 
 A feedback loop captures user signals (thumbs up/down, explicit corrections, click-through rates) and feeds them back into the system to improve over time. Use feedback to: identify low-performing queries, surface retrieval failures, generate fine-tuning data for the embedding or generation model, and prioritize which documents to improve or add.
 
@@ -1002,9 +1002,9 @@ Without a feedback loop, your RAG system's quality is frozen at deployment time.
 
 ---
 
-## Quick Reference: Design Pitfalls & Best Practices
+### Quick Reference: Design Pitfalls & Best Practices
 
-### Common Pitfalls
+#### Common Pitfalls
 
 | Area | What Goes Wrong |
 |---|---|
@@ -1016,7 +1016,7 @@ Without a feedback loop, your RAG system's quality is frozen at deployment time.
 | Guardrails | No input/output validation in the pipeline |
 | Production | No versioning, no rollback plan, no feedback loop |
 
-### What Good Looks Like
+#### What Good Looks Like
 
 | Area | Best Practice |
 |---|---|
@@ -1033,7 +1033,7 @@ Without a feedback loop, your RAG system's quality is frozen at deployment time.
 
 ---
 
-## Appendix A: The RAG Developer Stack (2026)
+### Appendix A: The RAG Developer Stack (2026)
 
 While Agentic AI continues to evolve, RAG has powered some of the most practical, production-ready AI applications over the past 2-3 years — from enterprise search to chatbots, copilots, and domain-specific QA systems. Here is the modern RAG Developer Stack covering all critical layers:
 
@@ -1054,7 +1054,7 @@ Each layer plays a critical role — from reducing hallucinations to improving l
 
 ---
 
-## Appendix B: Recommended Tools & Technologies
+### Appendix B: Recommended Tools & Technologies
 
 | Category | Options |
 |---|---|
