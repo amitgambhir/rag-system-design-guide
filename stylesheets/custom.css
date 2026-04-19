@@ -1,0 +1,30 @@
+/* Wider content area */
+.md-grid {
+  max-width: 80%;
+}
+
+/* Bold blue sidebar section titles */
+nav.md-nav--primary .md-nav__item--section > .md-nav__link {
+  color: #1565C0;
+  font-weight: bold;
+  font-size: 0.8rem;
+}
+
+/* Dark mode: header and sidebar blend with background */
+[data-md-color-scheme="slate"] .md-header {
+  background-color: var(--md-default-bg-color);
+}
+
+[data-md-color-scheme="slate"] .md-tabs {
+  background-color: var(--md-default-bg-color);
+}
+
+/* Dark mode: sidebar section titles */
+[data-md-color-scheme="slate"] nav.md-nav--primary .md-nav__item--section > .md-nav__link {
+  color: #90CAF9;
+}
+
+/* Hide source repo metadata line */
+.md-source__facts {
+  display: none !important;
+}
