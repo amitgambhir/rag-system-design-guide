@@ -8,15 +8,30 @@
 
 ## Table of Contents
 
-1. [The Problem](#the-problem)
-2. [What It Does](#what-it-does)
-3. [Demo](#demo)
-4. [Built On](#built-on)
-5. [Quickstart](#quickstart)
-6. [Architecture](#architecture)
-7. [Run Locally](#run-locally)
-8. [Deploy Your Own](#deploy-your-own)
-9. [Why This Is Different](#why-this-is-different)
+1. [RAG Ecosystem](#rag-ecosystem)
+2. [The Problem](#the-problem)
+3. [What It Does](#what-it-does)
+4. [Demo](#demo)
+5. [Built On](#built-on)
+6. [Quickstart](#quickstart)
+7. [Architecture](#architecture)
+8. [Run Locally](#run-locally)
+9. [Deploy Your Own](#deploy-your-own)
+10. [Why This Is Different](#why-this-is-different)
+
+---
+
+## RAG Ecosystem
+
+This repo is part of a broader RAG toolkit:
+
+| Repo | What it covers |
+| --- | --- |
+| [rag-auditor](https://github.com/amitgambhir/rag-auditor) | Evaluate your RAG pipeline |
+| [multi-llm-rag-agent-chat](https://github.com/amitgambhir/multi-llm-rag-agent-chat) | Build a production RAG chatbot with multi-LLM routing |
+| [rag-system-design-guide](https://github.com/amitgambhir/rag-system-design-guide) ← you are here | Design reference — architecture patterns and trade-offs |
+
+Start with the design guide, build with the chatbot, evaluate with the auditor.
 
 ---
 
@@ -145,6 +160,20 @@ mkdocs serve
 - Focuses on **system design trade-offs**, not just definitions.
 - Connects **retrieval, generation, and operations** in one continuous reference.
 - Covers both **foundations** and **production realities**: evals, observability, security, and scaling.
+
+---
+
+## RAG Ecosystem
+
+This repo is part of a broader RAG toolkit:
+
+| Repo | What it covers |
+| --- | --- |
+| [rag-auditor](https://github.com/amitgambhir/rag-auditor) | Evaluate your RAG pipeline |
+| [multi-llm-rag-agent-chat](https://github.com/amitgambhir/multi-llm-rag-agent-chat) | Build a production RAG chatbot with multi-LLM routing |
+| [rag-system-design-guide](https://github.com/amitgambhir/rag-system-design-guide) ← you are here | Design reference — architecture patterns and trade-offs |
+
+Start with the design guide, build with the chatbot, evaluate with the auditor.
 
 ---
 
